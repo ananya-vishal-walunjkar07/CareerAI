@@ -21,17 +21,22 @@ display: flex;
 align-items: center;
 justify-content: space-between;
 padding: 18px 7%;
-background-color: #FFF9EF;
-border-bottom: 1px solid #E2D6C7;
+background-color: #6b1313;
+border-bottom: 1px solid #3b0505;
 }
 
+/* Container that holds the logo */
 .logo {
-font-size: 26px;
-font-weight: 800;
+  display: flex;
+  align-items: center;
 }
 
-.logo span {
-color: #6b1010;
+/* Image styling */
+.logo-image {
+  height: 85px; /* Adjust this value if you want the logo bigger or smaller */
+  width: 150px;  /* Keeps the logo image proportions correct */
+  display: block;
+  object-fit: contain;
 }
 
 .nav-links {
@@ -47,7 +52,7 @@ font-weight: 600;
 
 .nav-links a:hover,
 .nav-links .active {
-color:#6b1010;
+color:#d8cdcd;
 }
 
 .nav-buttons {
@@ -57,12 +62,16 @@ gap: 15px;
 }
 
 .login-btn {
+padding: 9px 17px;
+background-color: #853232;
+color: white;
+border-radius: 7px;
 font-weight: 600;
 }
 
 .signup-btn {
 padding: 9px 17px;
-background-color: #7A1F1F;
+background-color: #853232;
 color: white;
 border-radius: 7px;
 font-weight: 600;
@@ -97,7 +106,7 @@ font-weight: 700;
 .home-intro > p:last-child {
 max-width: 550px;
 margin: auto;
-color: #756A63;
+color: #645b55;
 font-size: 16px;
 }
 
@@ -186,8 +195,8 @@ display: flex;
 justify-content: space-between;
 align-items: center;
 padding: 25px 8%;
-background-color: #FFF9EF;
-border-top: 1px solid #E2D6C7;
+background-color: #681512;
+border-top: 1px solid #500b0b;
 }
 
 footer p {
