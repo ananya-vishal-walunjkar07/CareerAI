@@ -298,7 +298,7 @@ padding: 40px;
 background-color: #FFF9EF;
 border: 1px solid #E2D6C7;
 border-radius: 12px;
-box-shadow: 0 8px 25px rgba(50, 30, 20, 0.06);
+box-shadow: 0 8px 25px black (83, 19, 15, 0.06);
 }
 
 .auth-box > .logo {
