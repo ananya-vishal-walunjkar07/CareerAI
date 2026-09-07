@@ -96,6 +96,10 @@ text-align: center;
 padding: 90px 20px 55px;
 }
 
+.hero1{
+    color:#500b0b
+}
+
 .home-intro h1 {
 font-size: 50px;
 line-height: 1.1;
@@ -168,7 +172,7 @@ gap: 20px;
 .review-card {
 flex: 1 1 280px;
 padding: 28px;
-border: 1px solid #E2D6C7;
+border: 2px solid #645b55;
 border-radius: 12px;
 background-color: #FDF7ED;
 }
