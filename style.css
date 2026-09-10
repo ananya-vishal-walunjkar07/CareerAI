@@ -449,62 +449,149 @@ padding: 20px;
 padding: 30px 25px;
 }
 
-/* ==========================================
-   LANDING PAGE STYLES
-   ========================================== */
+/* ---------------- GENERAL ---------------- */
 
-/* Main container for the landing page layout */
-.landing-page {
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    background-color: #dbb787; /* Adjust color to match your theme */
+* {
+    margin: 0;
+    padding: 0;
     box-sizing: border-box;
 }
 
-/* Centered content box */
-.landing-hero {
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f5efd9;
+    color: #8f0018;
+}
+
+
+/* ---------------- HEADER ---------------- */
+
+.navbar {
+    height: 90px;
+    background-color: #9b001b;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 0 7%;
+}
+
+.logo {
+    font-size: 28px;
+    font-weight: bold;
+    color: white;
+}
+
+nav {
+    display: flex;
+    gap: 35px;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+}
+
+
+/* ---------------- HERO ---------------- */
+
+.hero {
+    min-height: calc(100vh - 90px);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    padding: 55px 20px;
+}
+
+
+/* ---------------- TEXT ---------------- */
+
+.hero-text {
+    font-family: "Comic Sans MS", cursive;
+
+    font-size: clamp(32px, 4vw, 58px);
+    font-weight: normal;
+
+    color: #8f0018;
     text-align: center;
-    max-width: 900px;
-    width: 100%;
+
+    line-height: 1.2;
 }
 
-/* Landing Page Heading */
-.landing-headline {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 2rem;
-    line-height: 1.3;
-    color: #7a0a0a;
-}
 
-/* Accent color for "where you want to be" */
-.landing-headline-highlight {
-    color: #740c0cad; /* Adjust to your brand primary color */
-}
+/* ---------------- VIDEO CARD ---------------- */
 
-/* Video Container */
-.landing-video-wrapper {
-    width: 100%;
-    max-width: 800px;
-    margin: 0 auto;
+.video-card {
+    width: min(420px, 75vw);
+    height: 300px;
+
+    background-color: white;
+
+    border: 2px solid #777;
     border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 20px 25px -5px rgba(83, 73, 73, 0.5);
+
+    padding: 10px;
+
+    margin: 25px 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
 }
 
-/* Video Element */
-.landing-video {
+
+/* ---------------- VIDEO ---------------- */
+
+.hero-video {
     width: 100%;
-    height: auto;
+    height: 100%;
+
+    object-fit: cover;
+
+    border-radius: 6px;
+
     display: block;
 }
 
-/* Mobile responsiveness */
+
+/* ---------------- MOBILE ---------------- */
+
 @media (max-width: 600px) {
-    .landing-headline {
-        font-size: 1.8rem;
+
+    .navbar {
+        height: 75px;
+        padding: 0 5%;
     }
+
+    .logo {
+        font-size: 22px;
+    }
+
+    nav {
+        gap: 15px;
+    }
+
+    nav a {
+        font-size: 14px;
+    }
+
+    .hero {
+        padding: 45px 15px;
+    }
+
+    .hero-text {
+        font-size: 32px;
+    }
+
+    .video-card {
+        width: min(300px, 80vw);
+        height: 230px;
+    }
+
 }
