@@ -63,7 +63,7 @@ gap: 15px;
 
 .login-btn {
 padding: 9px 17px;
-background-color: #853232;
+background-color: #8d4747;
 color: white;
 border-radius: 7px;
 font-weight: 600;
@@ -71,7 +71,7 @@ font-weight: 600;
 
 .signup-btn {
 padding: 9px 17px;
-background-color: #853232;
+background-color: #8d4747;
 color: white;
 border-radius: 7px;
 font-weight: 600;
@@ -713,7 +713,7 @@ cursor: pointer;
 /* ===== VIDEO ===== */
 
 .video-card {
-    width: 90% !important;
+    width: 100% !important;
     max-width: 1400px !important;
 
     height: 280px !important;
