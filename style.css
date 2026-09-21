@@ -63,7 +63,7 @@ gap: 15px;
 
 .login-btn {
 padding: 9px 17px;
-background-color: #8d4747;
+background-color: #a14747;
 color: white;
 border-radius: 7px;
 font-weight: 600;
@@ -71,7 +71,7 @@ font-weight: 600;
 
 .signup-btn {
 padding: 9px 17px;
-background-color: #8d4747;
+background-color: #a14747;
 color: white;
 border-radius: 7px;
 font-weight: 600;
@@ -80,7 +80,7 @@ font-weight: 600;
 .signup-btn:hover,
 .form-button:hover,
 .card-button:hover {
-background-color: #5E1515;
+background-color: #ca6666;
 }
 
 .small-heading {
@@ -299,7 +299,7 @@ cursor: pointer;
 
     padding: 40px 20px;
 
-    background-color: #57100d;
+    background-color: #5a2e26;
 }
 
 
@@ -337,7 +337,7 @@ cursor: pointer;
 
     padding: 45px;
 
-    background-color: #6b1313;
+    background-color: #d3b797;
 
     color: white;
 
@@ -425,7 +425,7 @@ cursor: pointer;
 .auth-form h1 {
     font-size: 32px;
 
-    color: #6b1313;
+    color: #d3b797;
 
     margin-bottom: 8px;
 }
@@ -476,7 +476,7 @@ cursor: pointer;
 }
 
 .auth-form input:focus {
-    border-bottom: 2px solid #7A1F1F;
+    border-bottom: 2px solid #d3b797;
 }
 
 .auth-form input::placeholder {
@@ -507,7 +507,7 @@ cursor: pointer;
     border: none;
     border-radius: 8px;
 
-    background-color: #7A1F1F;
+    background-color: #d3b797;
 
     color: white;
 
@@ -520,7 +520,7 @@ cursor: pointer;
 }
 
 .form-button:hover {
-    background-color: #5E1515;
+    background-color: #d3b797;
 }
 
 
