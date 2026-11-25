@@ -21,6 +21,10 @@ def create_report_for_resume(db: Session, resume_id: int, ai_result: dict) -> Re
     return new_report
 
 
+def create_report(db: Session, resume_id: int, data: dict) -> Report:
+    return create_report_for_resume(db, resume_id, data)
+
+
 def get_reports_for_resume(db: Session, resume_id: int) -> list[Report]:
     return db.query(Report).filter(Report.resume_id == resume_id).order_by(Report.generated_at.desc()).all()
 

@@ -1,686 +1,118 @@
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function encodeWAV(samples, sampleRate) {
+    const buffer = new ArrayBuffer(44 + samples.length * 2);
+    const view = new DataView(buffer);
+    function writeString(view, offset, string) {
+        for (let i = 0; i < string.length; i++) {
+            view.setUint8(offset + i, string.charCodeAt(i));
+        }
+    }
+    writeString(view, 0, 'RIFF');
+    view.setUint32(4, 36 + samples.length * 2, true);
+    writeString(view, 8, 'WAVE');
+    writeString(view, 12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    writeString(view, 36, 'data');
+    view.setUint32(40, samples.length * 2, true);
+    let offset = 44;
+    for (let i = 0; i < samples.length; i++, offset += 2) {
+        const s = Math.max(-1, Math.min(1, samples[i]));
+        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+    }
+    return new Blob([view], { type: 'audio/wav' });
+}
+
 
 
 
 
 /* ========================================
-
-
-
-   CAREERAI - SIGNUP
-
-
-
+   CAREERAI - SIGNUP (API INTEGRATED)
 ======================================== */
-
-
-
-
-
-
-
 const signupForm = document.getElementById("signupForm");
-
-
-
-
-
-
-
 if (signupForm) {
-
-
-
-    const name = document.getElementById("signupName");
-
-
-
-    const email = document.getElementById("signupEmail");
-
-
-
-    const username = document.getElementById("signupUsername");
-
-
-
-    const password = document.getElementById("signupPassword");
-
-
-
+    const nameInput = document.getElementById("signupName");
+    const emailInput = document.getElementById("signupEmail");
+    const passwordInput = document.getElementById("signupPassword");
     const message = document.getElementById("signupMessage");
 
-
-
-
-
-
-
-    signupForm.addEventListener("submit", function (event) {
-
-
-
+    signupForm.addEventListener("submit", async function (event) {
         event.preventDefault();
+        const fullName = nameInput ? nameInput.value.trim() : "";
+        const userEmail = emailInput ? emailInput.value.trim() : "";
+        const userPassword = passwordInput ? passwordInput.value : "";
 
-
-
-
-
-
-
-        const fullName = name.value.trim();
-
-
-
-        const userEmail = email.value.trim();
-
-
-
-        const userUsername = username.value.trim();
-
-
-
-        const userPassword = password.value;
-
-
-
-
-
-
-
-        // Check empty fields
-
-
-
-        if (
-
-
-
-            !fullName ||
-
-
-
-            !userEmail ||
-
-
-
-            !userUsername ||
-
-
-
-            !userPassword
-
-
-
-        ) {
-
-
-
+        if (!fullName || !userEmail || !userPassword) {
             message.textContent = "Please fill in all the fields.";
-
-
-
             return;
-
-
-
         }
 
-
-
-
-
-
-
-        // Get saved accounts
-
-
-
-        let users = [];
-
-
-
-
-
-
-
+        message.textContent = "Creating your account...";
         try {
-
-
-
-            users = JSON.parse(
-
-
-
-                localStorage.getItem("careerAIUsers") || "[]"
-
-
-
-            );
-
-
-
+            await apiSignup(fullName, userEmail, userPassword);
+            message.style.color = "#157347";
+            message.textContent = "Account created successfully! Redirecting to login...";
+            if (typeof showConfetti === "function") showConfetti();
+            setTimeout(function () {
+                window.location.href = "login.html";
+            }, 1200);
         } catch (error) {
-
-
-
-            message.textContent =
-
-
-
-                "Unable to read saved accounts. Please try again.";
-
-
-
-            return;
-
-
-
+            message.style.color = "#c62828";
+            message.textContent = error.message || "Unable to save your account. Please try again.";
         }
-
-
-
-
-
-
-
-        // Check if username already exists
-
-
-
-        const existingUser = users.find(function (user) {
-
-
-
-            return user.username.toLowerCase() ===
-
-
-
-                userUsername.toLowerCase();
-
-
-
-        });
-
-
-
-
-
-
-
-        if (existingUser) {
-
-
-
-            message.textContent =
-
-
-
-                "Username already exists. Please choose another.";
-
-
-
-            return;
-
-
-
-        }
-
-
-
-
-
-
-
-        // Create and save account
-
-
-
-        const newUser = {
-
-
-
-            name: fullName,
-
-
-
-            email: userEmail,
-
-
-
-            username: userUsername,
-
-
-
-            password: userPassword
-
-
-
-        };
-
-
-
-
-
-
-
-        users.push(newUser);
-
-
-
-
-
-
-
-        try {
-
-
-
-            localStorage.setItem(
-
-
-
-                "careerAIUsers",
-
-
-
-                JSON.stringify(users)
-
-
-
-            );
-
-
-
-        } catch (error) {
-
-
-
-            message.textContent =
-
-
-
-                "Unable to save your account. Please try again.";
-
-
-
-            return;
-
-
-
-        }
-
-
-
-
-
-
-
-        message.textContent =
-
-
-
-            "Account created successfully! Redirecting to home...";
-
-
-
-
-
-
-
-        if (typeof showConfetti === "function") {
-
-
-
-            showConfetti();
-
-
-
-        }
-
-
-
-
-
-
-
-        // Go to home page
-
-
-
-        setTimeout(function () {
-
-
-
-            window.location.href = "home.html";
-
-
-
-        }, 1200);
-
-
-
     });
-
-
-
 }
-
-
-
-
-
-
-
-
-
-
 
 /* ========================================
-
-
-
-   CAREERAI - LOGIN
-
-
-
+   CAREERAI - LOGIN (API INTEGRATED)
 ======================================== */
-
-
-
-
-
-
-
 const loginForm = document.getElementById("loginForm");
-
-
-
-
-
-
-
 if (loginForm) {
-
-
-
-    const username = document.getElementById("loginUsername");
-
-
-
-    const password = document.getElementById("loginPassword");
-
-
-
+    const emailInput = document.getElementById("loginUsername");
+    const passwordInput = document.getElementById("loginPassword");
     const message = document.getElementById("loginMessage");
 
-
-
-
-
-
-
-    loginForm.addEventListener("submit", function (event) {
-
-
-
+    loginForm.addEventListener("submit", async function (event) {
         event.preventDefault();
+        const enteredEmail = emailInput ? emailInput.value.trim() : "";
+        const enteredPassword = passwordInput ? passwordInput.value : "";
 
-
-
-
-
-
-
-        const enteredUsername = username.value.trim();
-
-
-
-        const enteredPassword = password.value;
-
-
-
-
-
-
-
-        // Check empty fields
-
-
-
-        if (!enteredUsername || !enteredPassword) {
-
-
-
-            message.textContent =
-
-
-
-                "Please enter your username and password.";
-
-
-
+        if (!enteredEmail || !enteredPassword) {
+            message.textContent = "Please enter your email and password.";
             return;
-
-
-
         }
 
-
-
-
-
-
-
-        // Retrieve registered accounts
-
-
-
-        let users = [];
-
-
-
-
-
-
-
+        message.textContent = "Logging in...";
         try {
-
-
-
-            users = JSON.parse(
-
-
-
-                localStorage.getItem("careerAIUsers") || "[]"
-
-
-
-            );
-
-
-
-        } catch (error) {
-
-
-
-            message.textContent =
-
-
-
-                "Unable to retrieve accounts. Please try again.";
-
-
-
-            return;
-
-
-
-        }
-
-
-
-
-
-
-
-        // Verify username and password
-
-
-
-        const matchedUser = users.find(function (user) {
-
-
-
-            return (
-
-
-
-                user.username.toLowerCase() ===
-
-
-
-                    enteredUsername.toLowerCase() &&
-
-
-
-                user.password === enteredPassword
-
-
-
-            );
-
-
-
-        });
-
-
-
-
-
-
-
-        if (matchedUser) {
-
-
-
-            // Save current user's public details
-
-
-
-            localStorage.setItem(
-
-
-
-                "careerAIUser",
-
-
-
-                JSON.stringify({
-
-
-
-                    name: matchedUser.name,
-
-
-
-                    email: matchedUser.email,
-
-
-
-                    username: matchedUser.username
-
-
-
-                })
-
-
-
-            );
-
-
-
-
-
-
-
-            message.textContent =
-
-
-
-                "Login successful! Redirecting to home...";
-
-
-
-
-
-
-
-            if (typeof showConfetti === "function") {
-
-
-
-                showConfetti();
-
-
-
-            }
-
-
-
-
-
-
-
-            // Go to home page
-
-
-
+            await apiLogin(enteredEmail, enteredPassword);
+            const user = await apiGetMe();
+            localStorage.setItem("careerai_user", JSON.stringify(user));
+            message.style.color = "#157347";
+            message.textContent = "Login successful! Redirecting to dashboard...";
+            if (typeof showConfetti === "function") showConfetti();
             setTimeout(function () {
-
-
-
-                window.location.href = "home.html";
-
-
-
-            }, 1200);
-
-
-
-
-
-
-
-        } else {
-
-
-
-            message.textContent =
-
-
-
-                "Invalid username or password. Please sign up first.";
-
-
-
+                window.location.href = "dashboard.html";
+            }, 1000);
+        } catch (error) {
+            message.style.color = "#c62828";
+            message.textContent = error.message || "Invalid email or password. Please try again.";
         }
-
-
-
     });
-
-
-
 }
-
-
-
-
-
-
-
-
-
-
 
 /* =========================
 
@@ -1857,2532 +1289,248 @@ if (formAssistant) {
 
 
 /* =====================================================
-
-
-
-   CAREERAI - AI INTERVIEW
-
-
-
+   CAREERAI - AI INTERVIEW (API & GEMINI INTEGRATED)
    ===================================================== */
-
-
-
-
-
-
-
-
-
-
-
-/* =====================================================
-
-
-
-   QUESTIONS
-
-
-
-   ===================================================== */
-
-
-
-
-
-
-
-const questions = [
-
-
-
-
-
-
-
-    "Tell me about yourself and your journey as a student.",
-
-
-
-
-
-
-
-    "What is one project you have worked on that you are particularly proud of? What did you learn from it?",
-
-
-
-
-
-
-
-    "Tell me about a challenge or problem you faced while working on a project. How did you solve it?",
-
-
-
-
-
-
-
-    "What technical skill are you currently trying to improve, and why?",
-
-
-
-
-
-
-
-    "Where do you see yourself at the beginning of your career, and what are you doing today to get there?"
-
-
-
-
-
-
-
-];
-
-
-
-
-
-
-
-
-
-
-
-/* =====================================================
-
-
-
-   VARIABLES
-
-
-
-   ===================================================== */
-
-
-
-
-
-
-
-let currentQuestion = 0;
-
-
-
-
-
-
-
-let mediaRecorder = null;
-
-
-
-
-
-
-
-let audioChunks = [];
-
-
-
-
-
-
-
-let recordedAudio = null;
-
-
-
-
-
-
-
-let isRecording = false;
-
-
-
-
-
-
-
-
-
-
-
-/* =====================================================
-
-
-
-   ELEMENTS
-
-
-
-   ===================================================== */
-
-
-
-
-
-
-
-const chatArea =
-
-
-
-    document.getElementById("chatArea");
-
-
-
-
-
-
-
-const startWrapper =
-
-
-
-    document.getElementById("startWrapper");
-
-
-
-
-
-
-
-const startInterviewBtn =
-
-
-
-    document.getElementById("startInterviewBtn");
-
-
-
-
-
-
-
-const recordingPanel =
-
-
-
-    document.getElementById("recordingPanel");
-
-
-
-
-
-
-
-const recordBtn =
-
-
-
-    document.getElementById("recordBtn");
-
-
-
-
-
-
-
-const stopBtn =
-
-
-
-    document.getElementById("stopBtn");
-
-
-
-
-
-
-
-const recordingText =
-
-
-
-    document.getElementById("recordingText");
-
-
-
-
-
-
-
-const nextSection =
-
-
-
-    document.getElementById("nextSection");
-
-
-
-
-
-
-
-const nextQuestionBtn =
-
-
-
-    document.getElementById("nextQuestionBtn");
-
-
-
-
-
-
-
-const progressText =
-
-
-
-    document.getElementById("progressText");
-
-
-
-
-
-
-
-const progressFill =
-
-
-
-    document.getElementById("progressFill");
-
-
-
-
-
-
-
-
-
-
-
-/* =====================================================
-
-
-
-   INTERVIEW PAGE CONTROLLER
-
-
-
-   ===================================================== */
-
-
-
-if (startInterviewBtn) {
-
-
-
-/* =====================================================
-
-
-
-   START INTERVIEW
-
-
-
-   ===================================================== */
-
-
-
-
-
-
-
-startInterviewBtn.addEventListener(
-
-
-
-    "click",
-
-
-
-    function () {
-
-
-
-
-
-
-
-        startWrapper.style.display = "none";
-
-
-
-
-
-
-
-        currentQuestion = 0;
-
-
-
-
-
-
-
-        showQuestion();
-
-
-
-
-
-
-
+function initRealInterview() {
+    const startInterviewBtn = document.getElementById("startInterviewBtn");
+    if (!startInterviewBtn) return;
+
+    if (!requireAuth()) return;
+
+    const chatArea = document.getElementById("chatArea");
+    const startWrapper = document.getElementById("startWrapper");
+    const recordingPanel = document.getElementById("recordingPanel");
+    const recordBtn = document.getElementById("recordBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const recordingText = document.getElementById("recordingText");
+    const nextSection = document.getElementById("nextSection");
+    const nextQuestionBtn = document.getElementById("nextQuestionBtn");
+    const progressText = document.getElementById("progressText");
+    const progressFill = document.getElementById("progressFill");
+
+    let questionIndex = 0;
+    const TOTAL_ESTIMATED_QUESTIONS = 8;
+    let currentTranscribedText = "";
+    let mediaRecorder = null;
+    let audioStream = null;
+    let audioContext = null;
+    let audioInput = null;
+    let scriptProcessor = null;
+    let pcmSamples = [];
+    let isWebRecording = false;
+
+    function addCaraBubble(text) {
+        const row = document.createElement("div");
+        row.className = "message-row cara-row";
+        row.innerHTML = `
+            <div class="avatar-container cara-avatar">
+                <img src="cursor.png" alt="Cara" class="cara-image">
+            </div>
+            <div class="message-content">
+                <div class="speaker-name">Cara</div>
+                <div class="chat-bubble cara-bubble">
+                    <p>${escapeHtml(text)}</p>
+                </div>
+            </div>
+        `;
+        chatArea.appendChild(row);
+        row.scrollIntoView({ behavior: "smooth" });
     }
 
-
-
-);
-
-
-
-
-
-
-
-
-
-
-
-/* =====================================================
-
-
-
-   SHOW QUESTION
-
-
-
-   ===================================================== */
-
-
-
-
-
-
-
-function showQuestion() {
-
-
-
-
-
-
-
-    /* Reset recording state */
-
-
-
-
-
-
-
-    recordingPanel.classList.remove("recording");
-
-
-
-
-
-
-
-    recordingPanel.style.display = "block";
-
-
-
-
-
-
-
-    nextSection.style.display = "none";
-
-
-
-
-
-
-
-    recordBtn.disabled = false;
-
-
-
-
-
-
-
-    stopBtn.disabled = true;
-
-
-
-
-
-
-
-    recordingText.textContent =
-
-
-
-        "Ready to record";
-
-
-
-
-
-
-
-    document.getElementById("recordBtnText").textContent =
-
-
-
-        "Start Recording";
-
-
-
-
-
-
-
-
-
-
-
-    /* Create Cara's question message */
-
-
-
-
-
-
-
-    const questionRow =
-
-
-
-        document.createElement("div");
-
-
-
-
-
-
-
-    questionRow.className =
-
-
-
-        "message-row cara-row question-row";
-
-
-
-
-
-
-
-
-
-
-
-    questionRow.innerHTML = `
-
-
-
-
-
-
-
-        <div class="avatar-container question-avatar">
-
-
-
-
-
-
-
-            <img
-
-
-
-                src="1.jpeg"
-
-
-
-                alt="Cara"
-
-
-
-                class="cara-image"
-
-
-
-            >
-
-
-
-
-
-
-
-        </div>
-
-
-
-
-
-
-
-
-
-
-
-        <div class="message-content">
-
-
-
-
-
-
-
-            <div class="speaker-name">
-
-
-
-                Cara
-
-
-
+    function addUserBubble(text) {
+        const row = document.createElement("div");
+        row.className = "message-row user-row";
+        row.innerHTML = `
+            <div class="message-content" style="align-items: flex-end;">
+                <div class="speaker-name">You</div>
+                <div class="chat-bubble user-bubble">
+                    <p>${escapeHtml(text)}</p>
+                </div>
             </div>
-
-
-
-
-
-
-
-
-
-
-
-            <div class="chat-bubble cara-bubble">
-
-
-
-
-
-
-
-                <p>
-
-
-
-                    ${questions[currentQuestion]}
-
-
-
-                </p>
-
-
-
-
-
-
-
-            </div>
-
-
-
-
-
-
-
-        </div>
-
-
-
-
-
-
-
-    `;
-
-
-
-
-
-
-
-
-
-
-
-    chatArea.appendChild(questionRow);
-
-
-
-
-
-
-
-
-
-
-
-    /* Update progress */
-
-
-
-
-
-
-
-    updateProgress();
-
-
-
-
-
-
-
-
-
-
-
-    /* Scroll to question */
-
-
-
-
-
-
-
-    setTimeout(function () {
-
-
-
-
-
-
-
-        chatArea.scrollTo({
-
-
-
-
-
-
-
-            top: chatArea.scrollHeight,
-
-
-
-
-
-
-
-            behavior: "smooth"
-
-
-
-
-
-
-
-        });
-
-
-
-
-
-
-
-    }, 100);
-
-
-
-
-
-
-
-}
-
-
-
-
-
-
-
-
-
-
-
-/* =====================================================
-
-
-
-   PROGRESS
-
-
-
-   ===================================================== */
-
-
-
-
-
-
-
-function updateProgress() {
-
-
-
-
-
-
-
-    progressText.textContent =
-
-
-
-        `Question ${currentQuestion + 1} of ${questions.length}`;
-
-
-
-
-
-
-
-
-
-
-
-    const percentage =
-
-
-
-        ((currentQuestion + 1) / questions.length) * 100;
-
-
-
-
-
-
-
-
-
-
-
-    progressFill.style.width =
-
-
-
-        percentage + "%";
-
-
-
-
-
-
-
-}
-
-
-
-
-
-
-
-
-
-
-
-/* =====================================================
-
-
-
-   START RECORDING
-
-
-
-   ===================================================== */
-
-
-
-
-
-
-
-recordBtn.addEventListener(
-
-
-
-    "click",
-
-
-
-    async function () {
-
-
-
-
-
-
-
-        if (isRecording) {
-
-
-
-            return;
-
-
-
+        `;
+        chatArea.appendChild(row);
+        row.scrollIntoView({ behavior: "smooth" });
+    }
+
+    function updateProgressBar() {
+        const pct = Math.min(100, Math.round((questionIndex / TOTAL_ESTIMATED_QUESTIONS) * 100));
+        if (progressText) progressText.textContent = `Question ${questionIndex}`;
+        if (progressFill) progressFill.style.width = pct + "%";
+    }
+
+    startInterviewBtn.addEventListener("click", async function () {
+        startInterviewBtn.disabled = true;
+        startInterviewBtn.textContent = "Starting AI Session...";
+        try {
+            const data = await apiStartInterview();
+            startWrapper.style.display = "none";
+            recordingPanel.style.display = "block";
+            questionIndex = 1;
+            updateProgressBar();
+            addCaraBubble(data.question);
+        } catch (err) {
+            startInterviewBtn.disabled = false;
+            startInterviewBtn.textContent = "Start Interview";
+            addCaraBubble("Sorry, could not initialize interview: " + err.message);
+        }
+    });
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognitionInstance = null;
+    if (SpeechRecognition) {
+        recognitionInstance = new SpeechRecognition();
+        recognitionInstance.continuous = true;
+        recognitionInstance.interimResults = true;
+        recognitionInstance.lang = "en-US";
+    }
+
+    recordBtn.addEventListener("click", async function () {
+        try {
+            pcmSamples = [];
+            currentTranscribedText = "";
+            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            audioInput = audioContext.createMediaStreamSource(audioStream);
+            scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
+            scriptProcessor.onaudioprocess = function (e) {
+                if (!isWebRecording) return;
+                const inputData = e.inputBuffer.getChannelData(0);
+                for (let i = 0; i < inputData.length; i++) {
+                    pcmSamples.push(inputData[i]);
+                }
+            };
+            audioInput.connect(scriptProcessor);
+            scriptProcessor.connect(audioContext.destination);
+
+            isWebRecording = true;
+            recordBtn.disabled = true;
+            stopBtn.disabled = false;
+            recordingPanel.classList.add("recording");
+            recordingText.textContent = "Listening... Speak naturally.";
+
+            if (recognitionInstance) {
+                recognitionInstance.onresult = function (event) {
+                    let fullText = "";
+                    for (let i = 0; i < event.results.length; i++) {
+                        fullText += event.results[i][0].transcript + " ";
+                    }
+                    currentTranscribedText = fullText.trim();
+                    if (currentTranscribedText) {
+                        recordingText.textContent = 'Heard: "' + currentTranscribedText.slice(-60) + '"';
+                    }
+                };
+                recognitionInstance.start();
+            }
+
+        } catch (err) {
+            recordingText.textContent = "Microphone notice: " + err.message;
+            recordBtn.disabled = false;
+            stopBtn.disabled = true;
+        }
+    });
+
+    stopBtn.addEventListener("click", async function () {
+        if (!isWebRecording) return;
+        isWebRecording = false;
+        recordBtn.disabled = false;
+        stopBtn.disabled = true;
+        recordingPanel.classList.remove("recording");
+        recordingText.textContent = "Processing speech...";
+
+        if (recognitionInstance) {
+            try { recognitionInstance.stop(); } catch (e) {}
         }
 
+        if (scriptProcessor && audioInput) {
+            try {
+                audioInput.disconnect();
+                scriptProcessor.disconnect();
+            } catch (e) {}
+        }
 
+        if (audioStream) {
+            audioStream.getTracks().forEach(t => t.stop());
+        }
 
+        if (!currentTranscribedText && pcmSamples.length > 0 && audioContext) {
+            try {
+                const wavBlob = encodeWAV(pcmSamples, audioContext.sampleRate);
+                const resp = await apiTranscribeSpeech(wavBlob);
+                if (resp && resp.text) {
+                    currentTranscribedText = resp.text.trim();
+                }
+            } catch (err) {
+                console.warn("Speech API fallback notice:", err);
+            }
+        }
 
+        if (audioContext) {
+            try { audioContext.close(); } catch (e) {}
+        }
 
+        if (currentTranscribedText) {
+            recordingText.textContent = 'Captured: "' + currentTranscribedText + '"';
+            nextSection.style.display = "block";
+        } else {
+            recordingText.innerHTML = 'Nothing recorded. <a href="javascript:void(0)" id="manualAnswerLink" style="color:#681313; font-weight:600; text-decoration:underline;">Type your answer?</a>';
+            const manualLink = document.getElementById("manualAnswerLink");
+            if (manualLink) {
+                manualLink.addEventListener("click", function () {
+                    const text = prompt("Enter your interview response:");
+                    if (text && text.trim()) {
+                        currentTranscribedText = text.trim();
+                        recordingText.textContent = 'Captured: "' + currentTranscribedText + '"';
+                        nextSection.style.display = "block";
+                    }
+                });
+            }
+        }
+    });
 
+    nextQuestionBtn.addEventListener("click", async function () {
+        if (!currentTranscribedText) return;
+        nextQuestionBtn.disabled = true;
+        nextQuestionBtn.textContent = "Submitting Answer...";
 
-
-
-
+        const answerToSend = currentTranscribedText;
+        addUserBubble(answerToSend);
+        currentTranscribedText = "";
+        nextSection.style.display = "none";
+        recordingText.textContent = "Ready to record";
 
         try {
-
-
-
-
-
-
-
-            const stream =
-
-
-
-                await navigator.mediaDevices.getUserMedia({
-
-
-
-                    audio: true
-
-
-
-                });
-
-
-
-
-
-
-
-
-
-
-
-            mediaRecorder =
-
-
-
-                new MediaRecorder(stream);
-
-
-
-
-
-
-
-
-
-
-
-            audioChunks = [];
-
-
-
-
-
-
-
-
-
-
-
-            mediaRecorder.addEventListener(
-
-
-
-                "dataavailable",
-
-
-
-                function (event) {
-
-
-
-
-
-
-
-                    if (event.data.size > 0) {
-
-
-
-
-
-
-
-                        audioChunks.push(event.data);
-
-
-
-
-
-
-
-                    }
-
-
-
-
-
-
-
-                }
-
-
-
-            );
-
-
-
-
-
-
-
-
-
-
-
-            mediaRecorder.addEventListener(
-
-
-
-                "stop",
-
-
-
-                function () {
-
-
-
-
-
-
-
-                    recordedAudio =
-
-
-
-                        new Blob(
-
-
-
-                            audioChunks,
-
-
-
-                            {
-
-
-
-                                type: "audio/webm"
-
-
-
-                            }
-
-
-
-                        );
-
-
-
-
-
-
-
-
-
-
-
-                    stream
-
-
-
-                        .getTracks()
-
-
-
-                        .forEach(
-
-
-
-                            track => track.stop()
-
-
-
-                        );
-
-
-
-
-
-
-
-
-
-
-
-                    showRecordedAnswer();
-
-
-
-
-
-
-
-                }
-
-
-
-            );
-
-
-
-
-
-
-
-
-
-
-
-            mediaRecorder.start();
-
-
-
-
-
-
-
-            isRecording = true;
-
-
-
-
-
-
-
-
-
-
-
-            /* UI */
-
-
-
-
-
-
-
-            recordingPanel.classList.add("recording");
-
-
-
-
-
-
-
-            recordingText.textContent =
-
-
-
-                "Recording...";
-
-
-
-
-
-
-
-            document.getElementById("recordBtnText").textContent =
-
-
-
-                "Recording...";
-
-
-
-
-
-
-
-            recordBtn.disabled = true;
-
-
-
-
-
-
-
-            stopBtn.disabled = false;
-
-
-
-
-
-
-
-
-
-
-
-        } catch (error) {
-
-
-
-
-
-
-
-            console.error(error);
-
-
-
-
-
-
-
-            alert(
-
-
-
-                "Microphone access is required for the interview. Please allow microphone access in your browser."
-
-
-
-            );
-
-
-
-
-
-
-
+            const data = await apiSubmitAnswer(answerToSend);
+
+            if (data.completed) {
+                addCaraBubble("Superb! You have completed the interview. Your background and career aspirations have been analyzed and saved. Let's head to the Resume Optimizer to assemble your professional ATS resume!");
+                recordingPanel.style.display = "none";
+                nextSection.style.display = "block";
+                nextQuestionBtn.style.display = "none";
+                const doneBtn = document.createElement("a");
+                doneBtn.href = "resume.html";
+                doneBtn.className = "next-question-btn";
+                doneBtn.style.textDecoration = "none";
+                doneBtn.style.display = "inline-block";
+                doneBtn.style.marginTop = "10px";
+                doneBtn.textContent = "Open Resume Optimizer →";
+                nextSection.appendChild(doneBtn);
+                if (progressText) progressText.textContent = "Interview Completed ✓";
+                if (progressFill) progressFill.style.width = "100%";
+            } else {
+                questionIndex++;
+                updateProgressBar();
+                addCaraBubble(data.next_question);
+                nextQuestionBtn.disabled = false;
+                nextQuestionBtn.textContent = "Next Question →";
+            }
+        } catch (err) {
+            addCaraBubble("Notice: " + err.message);
+            nextQuestionBtn.disabled = false;
+            nextQuestionBtn.textContent = "Next Question →";
         }
-
-
-
-
-
-
-
-    }
-
-
-
-);
-
-
-
-
-
-
-
-
-
-
-
-/* =====================================================
-
-
-
-   STOP RECORDING
-
-
-
-   ===================================================== */
-
-
-
-
-
-
-
-stopBtn.addEventListener(
-
-
-
-    "click",
-
-
-
-    function () {
-
-
-
-
-
-
-
-        if (
-
-
-
-            mediaRecorder &&
-
-
-
-            mediaRecorder.state !== "inactive"
-
-
-
-        ) {
-
-
-
-
-
-
-
-            mediaRecorder.stop();
-
-
-
-
-
-
-
-            isRecording = false;
-
-
-
-
-
-
-
-
-
-
-
-            recordingPanel.classList.remove(
-
-
-
-                "recording"
-
-
-
-            );
-
-
-
-
-
-
-
-
-
-
-
-            recordingText.textContent =
-
-
-
-                "Answer recorded ✓";
-
-
-
-
-
-
-
-
-
-
-
-            recordBtn.disabled = true;
-
-
-
-
-
-
-
-            stopBtn.disabled = true;
-
-
-
-
-
-
-
-        }
-
-
-
-
-
-
-
-    }
-
-
-
-);
-
-
-
-
-
-
-
-
-
-
-
-/* =====================================================
-
-
-
-   SHOW USER'S RECORDED ANSWER
-
-
-
-   ===================================================== */
-
-
-
-
-
-
-
-function showRecordedAnswer() {
-
-
-
-
-
-
-
-    const userRow =
-
-
-
-        document.createElement("div");
-
-
-
-
-
-
-
-    userRow.className =
-
-
-
-        "message-row user-row";
-
-
-
-
-
-
-
-
-
-
-
-    userRow.innerHTML = `
-
-
-
-
-
-
-
-        <div class="avatar-container user-avatar">
-
-
-
-
-
-
-
-            👤
-
-
-
-
-
-
-
-        </div>
-
-
-
-
-
-
-
-
-
-
-
-        <div class="message-content">
-
-
-
-
-
-
-
-            <div class="speaker-name">
-
-
-
-
-
-
-
-                You
-
-
-
-
-
-
-
-            </div>
-
-
-
-
-
-
-
-
-
-
-
-            <div class="chat-bubble user-bubble">
-
-
-
-
-
-
-
-                <p>
-
-
-
-                    🎙️ Answer recorded
-
-
-
-                </p>
-
-
-
-
-
-
-
-            </div>
-
-
-
-
-
-
-
-        </div>
-
-
-
-
-
-
-
-    `;
-
-
-
-
-
-
-
-
-
-
-
-    chatArea.appendChild(userRow);
-
-
-
-
-
-
-
-
-
-
-
-    /* Add audio player */
-
-
-
-
-
-
-
-    if (recordedAudio) {
-
-
-
-
-
-
-
-        const audioURL =
-
-
-
-            URL.createObjectURL(recordedAudio);
-
-
-
-
-
-
-
-
-
-
-
-        const audio =
-
-
-
-            document.createElement("audio");
-
-
-
-
-
-
-
-
-
-
-
-        audio.controls = true;
-
-
-
-
-
-
-
-        audio.src = audioURL;
-
-
-
-
-
-
-
-        audio.style.marginTop = "10px";
-
-
-
-
-
-
-
-        audio.style.width = "100%";
-
-
-
-
-
-
-
-
-
-
-
-        const bubble =
-
-
-
-            userRow.querySelector(
-
-
-
-                ".user-bubble"
-
-
-
-            );
-
-
-
-
-
-
-
-
-
-
-
-        bubble.appendChild(audio);
-
-
-
-
-
-
-
-    }
-
-
-
-
-
-
-
-
-
-
-
-    /* Show next button */
-
-
-
-
-
-
-
-    nextSection.style.display = "block";
-
-
-
-
-
-
-
-
-
-
-
-    if (
-
-
-
-        currentQuestion ===
-
-
-
-        questions.length - 1
-
-
-
-    ) {
-
-
-
-
-
-
-
-        nextQuestionBtn.textContent =
-
-
-
-            "Finish Interview →";
-
-
-
-
-
-
-
-    } else {
-
-
-
-
-
-
-
-        nextQuestionBtn.textContent =
-
-
-
-            "Next Question →";
-
-
-
-
-
-
-
-    }
-
-
-
-
-
-
-
-
-
-
-
-    /* Scroll down */
-
-
-
-
-
-
-
-    setTimeout(function () {
-
-
-
-
-
-
-
-        chatArea.scrollTo({
-
-
-
-
-
-
-
-            top: chatArea.scrollHeight,
-
-
-
-
-
-
-
-            behavior: "smooth"
-
-
-
-
-
-
-
-        });
-
-
-
-
-
-
-
-    }, 100);
-
-
-
-
-
-
-
+    });
 }
-
-
-
-
-
-
-
-
-
-
-
-/* =====================================================
-
-
-
-   NEXT QUESTION / FINISH
-
-
-
-   ===================================================== */
-
-
-
-
-
-
-
-nextQuestionBtn.addEventListener(
-
-
-
-    "click",
-
-
-
-    function () {
-
-
-
-
-
-
-
-        /* If last question */
-
-
-
-
-
-
-
-        if (
-
-
-
-            currentQuestion ===
-
-
-
-            questions.length - 1
-
-
-
-        ) {
-
-
-
-
-
-
-
-            finishInterview();
-
-
-
-
-
-
-
-            return;
-
-
-
-
-
-
-
-        }
-
-
-
-
-
-
-
-
-
-
-
-        /* Move to next question */
-
-
-
-
-
-
-
-        currentQuestion++;
-
-
-
-
-
-
-
-        showQuestion();
-
-
-
-
-
-
-
-    }
-
-
-
-);
-
-
-
-
-
-
-
-
-
-
-
-/* =====================================================
-
-
-
-   FINISH INTERVIEW
-
-
-
-   ===================================================== */
-
-
-
-
-
-
-
-function finishInterview() {
-
-
-
-
-
-
-
-    recordingPanel.style.display =
-
-
-
-        "none";
-
-
-
-
-
-
-
-    nextSection.style.display =
-
-
-
-        "none";
-
-
-
-
-
-
-
-
-
-
-
-    /* Final Cara message */
-
-
-
-
-
-
-
-    const finalRow =
-
-
-
-        document.createElement("div");
-
-
-
-
-
-
-
-    finalRow.className =
-
-
-
-        "message-row cara-row";
-
-
-
-
-
-
-
-
-
-
-
-    finalRow.innerHTML = `
-
-
-
-
-
-
-
-        <div class="avatar-container">
-
-
-
-
-
-
-
-            <img
-
-
-
-                src="cursor.png"
-
-
-
-                alt="Cara"
-
-
-
-                class="cara-image"
-
-
-
-            >
-
-
-
-
-
-
-
-        </div>
-
-
-
-
-
-
-
-
-
-
-
-        <div class="message-content">
-
-
-
-
-
-
-
-            <div class="speaker-name">
-
-
-
-                Cara
-
-
-
-            </div>
-
-
-
-
-
-
-
-
-
-
-
-            <div class="chat-bubble cara-bubble">
-
-
-
-
-
-
-
-                <p>
-
-
-
-                    Great job! You've completed the interview.
-
-
-
-                </p>
-
-
-
-
-
-
-
-                <p>
-
-
-
-                    Now let's use what you've shared to
-
-
-
-                    help you improve your resume.
-
-
-
-                </p>
-
-
-
-
-
-
-
-            </div>
-
-
-
-
-
-
-
-        </div>
-
-
-
-
-
-
-
-    `;
-
-
-
-
-
-
-
-
-
-
-
-    chatArea.appendChild(finalRow);
-
-
-
-
-
-
-
-
-
-
-
-    /* Progress */
-
-
-
-
-
-
-
-    progressText.textContent =
-
-
-
-        "Interview Completed ✓";
-
-
-
-
-
-
-
-    progressFill.style.width =
-
-
-
-        "100%";
-
-
-
-
-
-
-
-
-
-
-
-    /* Optimize Resume button */
-
-
-
-
-
-
-
-    const optimizeWrapper =
-
-
-
-        document.createElement("div");
-
-
-
-
-
-
-
-    optimizeWrapper.className =
-
-
-
-        "start-interview-wrapper";
-
-
-
-
-
-
-
-
-
-
-
-    const optimizeButton =
-
-
-
-        document.createElement("button");
-
-
-
-
-
-
-
-    optimizeButton.className =
-
-
-
-        "start-interview-btn";
-
-
-
-
-
-
-
-
-
-
-
-    optimizeButton.textContent =
-
-
-
-        "Optimize My Resume →";
-
-
-
-
-
-
-
-
-
-
-
-    optimizeButton.addEventListener(
-
-
-
-        "click",
-
-
-
-        function () {
-
-
-
-
-
-
-
-            window.location.href =
-
-
-
-                "optimize.html";
-
-
-
-
-
-
-
-        }
-
-
-
-    );
-
-
-
-
-
-
-
-
-
-
-
-    optimizeWrapper.appendChild(
-
-
-
-        optimizeButton
-
-
-
-    );
-
-
-
-
-
-
-
-
-
-
-
-    chatArea.appendChild(
-
-
-
-        optimizeWrapper
-
-
-
-    );
-
-
-
-
-
-
-
-
-
-
-
-    /* Scroll */
-
-
-
-
-
-
-
-    setTimeout(function () {
-
-
-
-
-
-
-
-        chatArea.scrollTo({
-
-
-
-
-
-
-
-            top: chatArea.scrollHeight,
-
-
-
-
-
-
-
-            behavior: "smooth"
-
-
-
-
-
-
-
-        });
-
-
-
-
-
-
-
-    }, 100);
-
-
-
-
-
-
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}
-
-
 
 /* =====================================================
 
@@ -12722,3 +9870,240 @@ if (document.readyState === "loading") {
 
 
 
+
+
+/* =========================================================
+ *   CAREERAI - COMPREHENSIVE BACKEND INTEGRATION HANDLERS
+ * ========================================================= */
+
+// Universal Logout Handler
+function initUniversalLogout() {
+    document.querySelectorAll('a[href="login.html"].login-btn, a[href="login.html"]').forEach(el => {
+        if (el.textContent.trim().toLowerCase().includes("logout")) {
+            el.addEventListener("click", function (e) {
+                e.preventDefault();
+                clearToken();
+                window.location.href = "login.html";
+            });
+        }
+    });
+}
+
+// Dashboard Page Backend Wiring
+function initRealDashboard() {
+    if (!document.querySelector(".dashboard-body")) return;
+    if (!requireAuth()) return;
+
+    apiGetMe().then(user => {
+        if (user && user.name) {
+            const heroH1 = document.querySelector(".dashboard-hero h1");
+            if (heroH1) heroH1.textContent = `Welcome back, ${user.name}!`;
+        }
+    }).catch(() => {});
+
+    apiGetResume().then(resume => {
+        if (resume) {
+            sessionStorage.setItem("careerai_resume_id", resume.id);
+            apiGetReports(resume.id).then(reports => {
+                if (reports && reports.length > 0) {
+                    const latest = reports[0];
+                    const score = Math.round(latest.overall_score || 0);
+                    localStorage.setItem("careerAI_currentResumeAts", score);
+                    localStorage.setItem("careerAI_atsScore", score);
+                }
+            }).catch(() => {});
+        }
+    }).catch(() => {});
+}
+
+// Resume Optimizer Page Backend Upload & Sync Wiring
+function initRealResumeOptimizerIntegration() {
+    if (!document.querySelector(".optimizer-page")) return;
+    if (!requireAuth()) return;
+
+    apiGetResume().then(resume => {
+        if (resume && resume.id) {
+            sessionStorage.setItem("careerai_resume_id", resume.id);
+        }
+    }).catch(() => {});
+
+    const fileInput = document.getElementById("resume-file");
+    if (fileInput) {
+        fileInput.addEventListener("change", async function (e) {
+            const file = e.target.files && e.target.files[0];
+            if (file && file.type === "application/pdf") {
+                try {
+                    const uploaded = await apiUploadResume(file);
+                    sessionStorage.setItem("careerai_resume_id", uploaded.id);
+                    apiGenerateAtsReport(uploaded.id).then(rep => {
+                        const score = Math.round(rep.overall_score);
+                        localStorage.setItem("careerAI_currentResumeAts", score);
+                        localStorage.setItem("careerAI_atsScore", score);
+                    }).catch(() => {});
+                } catch (err) {
+                    console.warn("Backend resume upload note:", err.message);
+                }
+            }
+        });
+    }
+}
+
+// ATS Score Page Real Backend Report Wiring
+async function initRealAtsPage() {
+    if (!document.querySelector(".ats-container")) return;
+    if (!requireAuth()) return;
+
+    const scoreNumEl = document.getElementById("atsScoreValue");
+    const scoreContentP = document.getElementById("atsScoreLabel");
+
+    try {
+        let resumeId = sessionStorage.getItem("careerai_resume_id");
+        if (!resumeId) {
+            const res = await apiGetResume();
+            if (res && res.id) {
+                resumeId = res.id;
+                sessionStorage.setItem("careerai_resume_id", resumeId);
+            }
+        }
+
+        if (!resumeId) {
+            if (scoreContentP) scoreContentP.textContent = "Upload a resume first";
+            return;
+        }
+
+        let reports = await apiGetReports(resumeId);
+        let report = reports && reports.length > 0 ? reports[0] : null;
+
+        if (!report) {
+            if (scoreContentP) scoreContentP.textContent = "Generating AI Score...";
+            report = await apiGenerateAtsReport(resumeId);
+        }
+
+        if (report) {
+            const score = Math.round(report.overall_score || 0);
+            if (scoreNumEl) {
+                scoreNumEl.setAttribute("data-target", score);
+                scoreNumEl.textContent = score;
+            }
+
+            localStorage.setItem("careerAI_currentResumeAts", score);
+            localStorage.setItem("careerAI_atsScore", score);
+
+            if (scoreContentP) {
+                if (score >= 85) {
+                    scoreContentP.textContent = "Excellent";
+                    scoreContentP.style.color = "#2e7d32";
+                } else if (score >= 70) {
+                    scoreContentP.textContent = "Good";
+                    scoreContentP.style.color = "#1565c0";
+                } else {
+                    scoreContentP.textContent = "Needs Improvement";
+                    scoreContentP.style.color = "#c62828";
+                }
+            }
+
+            const breakdown = [
+                { label: "Keywords", val: report.keyword_match_score },
+                { label: "Formatting", val: report.formatting_score },
+            ];
+            document.querySelectorAll(".breakdown .metric").forEach(m => {
+                const label = m.querySelector(".metric-info span")?.textContent?.trim();
+                const matched = breakdown.find(b => b.label.toLowerCase() === (label || "").toLowerCase());
+                if (matched && matched.val !== null && matched.val !== undefined) {
+                    const pct = Math.round(matched.val);
+                    const strong = m.querySelector(".metric-info strong");
+                    const bar = m.querySelector(".progress-bar");
+                    if (strong) strong.textContent = pct + "%";
+                    if (bar) bar.style.width = pct + "%";
+                }
+            });
+
+            if (report.corrections && Array.isArray(report.corrections) && report.corrections.length > 0) {
+                const listEl = document.querySelector(".improvement-list");
+                if (listEl) {
+                    listEl.innerHTML = report.corrections.map((c, i) => `
+                        <div class="improvement">
+                            <span class="number">${String(i + 1).padStart(2, "0")}</span>
+                            <div>
+                                <h3>${escapeHtml(c.section || "General")}: ${escapeHtml(c.issue || "")}</h3>
+                                <p>${escapeHtml(c.suggestion || "")}</p>
+                            </div>
+                            <span class="impact">High Impact</span>
+                        </div>
+                    `).join("");
+                }
+            }
+        }
+    } catch (err) {
+        console.warn("ATS report loading notice:", err);
+    }
+}
+
+// Profile Page Real Backend Profile Sync
+async function initRealProfilePage() {
+    if (!document.querySelector(".profile-page-body")) return;
+    if (!requireAuth()) return;
+
+    try {
+        const user = await apiGetMe();
+        if (user) {
+            localStorage.setItem("careerai_user", JSON.stringify(user));
+
+            const nameEl = document.getElementById("profileDisplayName");
+            const emailEl = document.getElementById("profileEmailDisplay");
+            const initialsEl = document.getElementById("profileInitialsDisplay");
+            const navInitials = document.getElementById("navInitialsBadge");
+            const editName = document.getElementById("editNameInput");
+            const editEmail = document.getElementById("editEmailInput");
+
+            if (nameEl && user.name) nameEl.textContent = user.name;
+            if (emailEl && user.email) emailEl.textContent = user.email;
+            if (editName && user.name) editName.value = user.name;
+            if (editEmail && user.email) editEmail.value = user.email;
+
+            if (user.name) {
+                const initials = user.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+                if (initialsEl) initialsEl.textContent = initials;
+                if (navInitials) navInitials.textContent = initials;
+            }
+        }
+    } catch (err) {
+        console.warn("Profile load notice:", err);
+    }
+
+    const saveBtn = document.getElementById("saveProfileBtn");
+    if (saveBtn) {
+        saveBtn.addEventListener("click", async function () {
+            const editName = document.getElementById("editNameInput");
+            if (editName && editName.value.trim()) {
+                try {
+                    const updated = await apiUpdateMe(editName.value.trim());
+                    localStorage.setItem("careerai_user", JSON.stringify(updated));
+                    const nameEl = document.getElementById("profileDisplayName");
+                    if (nameEl) nameEl.textContent = updated.name;
+                    if (typeof showProfileToast === "function") {
+                        showProfileToast("Profile updated successfully on server! ✨");
+                    }
+                } catch (err) {
+                    alert("Could not update profile: " + err.message);
+                }
+            }
+        });
+    }
+}
+
+// Master Initialization on DOM Ready
+function initAllIntegrationHandlers() {
+    initUniversalLogout();
+    initRealInterview();
+    initRealDashboard();
+    initRealResumeOptimizerIntegration();
+    initRealAtsPage();
+    initRealProfilePage();
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initAllIntegrationHandlers);
+} else {
+    initAllIntegrationHandlers();
+}
